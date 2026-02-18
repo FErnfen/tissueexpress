@@ -146,7 +146,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 .ei{font-size:36px;margin-bottom:10px}
 
 /* DASHBOARD */
-.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:22px}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:22px}
 @media(max-width:660px){.sgrid{grid-template-columns:repeat(2,1fr)}}
 .sc{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:15px 17px;box-shadow:var(--sh)}
 .si{font-size:18px;margin-bottom:7px}
@@ -498,9 +498,15 @@ function rd(){
   const data=fData();
   const sm=(f)=>data.filter(f).reduce((s,e)=>s+(e.total||0),0);
   const cn=(f)=>data.filter(f).length;
+  const shipTotal=data.reduce((s,e)=>s+(e.shipSub||0),0);
+  const boxTotal=data.reduce((s,e)=>s+(e.boxSub||0),0);
+  const shipCnt=data.filter(e=>e.shipQty>0).reduce((s,e)=>s+(e.shipQty||0),0);
+  const boxCnt=data.filter(e=>e.boxQty>0).reduce((s,e)=>s+(e.boxQty||0),0);
   const n=v=>v.toLocaleString('th-TH',{maximumFractionDigits:0});
   document.getElementById('sgrid').innerHTML=`
-    <div class="sc"><div class="si">💰</div><div class="sl">ยอดรวม</div><div class="sn co">฿${n(sm(()=>1))}</div><div class="ss">${data.length} รายการ</div></div>
+    <div class="sc"><div class="si">💰</div><div class="sl">ยอดรวมทั้งหมด</div><div class="sn co">฿${n(sm(()=>1))}</div><div class="ss">${data.length} รายการ</div></div>
+    <div class="sc"><div class="si">🚚</div><div class="sl">รายได้ขนส่ง</div><div class="sn" style="color:#c2410c">฿${n(shipTotal)}</div><div class="ss">${shipCnt} ชิ้น</div></div>
+    <div class="sc"><div class="si">📦</div><div class="sl">รายได้กล่อง</div><div class="sn" style="color:#0369a1">฿${n(boxTotal)}</div><div class="ss">${boxCnt} ชิ้น</div></div>
     <div class="sc"><div class="si">💵</div><div class="sl">เงินสด</div><div class="sn cg">฿${n(sm(e=>e.payment==='cash'))}</div><div class="ss">${cn(e=>e.payment==='cash')} รายการ</div></div>
     <div class="sc"><div class="si">📱</div><div class="sl">QR Code</div><div class="sn cb2">฿${n(sm(e=>e.payment==='qr'))}</div><div class="ss">${cn(e=>e.payment==='qr')} รายการ</div></div>
     <div class="sc"><div class="si">🏦</div><div class="sl">โอนเงิน</div><div class="sn cp">฿${n(sm(e=>e.payment==='transfer'))}</div><div class="ss">${cn(e=>e.payment==='transfer')} รายการ</div></div>`;
