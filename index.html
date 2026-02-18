@@ -7,11 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot, serverTimestamp }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+<!-- Firebase CDN (compat) — ใช้ได้ทุกที่ไม่ต้องโฮสต์ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyA2mvLF8xVYO_FiJDqq-7YnuAcj7ZNtU1A",
     authDomain: "tissue-express-de63f.firebaseapp.com",
@@ -22,20 +21,15 @@
   };
 
   window.fbReady = false;
-
-  if (true) {
-    try {
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      window.fbReady = true;
-      window.db = db;
-      window.fbM = { collection, addDoc, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot, serverTimestamp };
-      document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('setup-banner').style.display = 'none';
-        window.startSync();
-      });
-    } catch(e) { console.error(e); }
-  }
+  try {
+    firebase.initializeApp(firebaseConfig);
+    window.db = firebase.firestore();
+    window.fbReady = true;
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('setup-banner').style.display = 'none';
+      window.startSync();
+    });
+  } catch(e) { console.error('Firebase error:', e); }
 </script>
 
 <style>
@@ -336,13 +330,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 window.startSync=function(){
-  const {collection,query,orderBy,onSnapshot}=window.fbM;
-  const q=query(collection(window.db,'sales'),orderBy('timestamp','desc'));
   setSS('spin','กำลังโหลด...');
-  onSnapshot(q,snap=>{
-    entries=snap.docs.map(d=>({id:d.id,...d.data()}));
-    saveL(); rtl(); rd(); setSS('','เชื่อมต่อแล้ว');
-  },err=>{setSS('err','เชื่อมต่อล้มเหลว');loadL();});
+  window.db.collection('sales').orderBy('timestamp','desc')
+    .onSnapshot(snap=>{
+      entries=snap.docs.map(d=>({id:d.id,...d.data()}));
+      saveL(); rtl(); rd(); setSS('','เชื่อมต่อแล้ว');
+    },err=>{setSS('err','เชื่อมต่อล้มเหลว');loadL();});
 };
 
 function loadL(){try{const r=localStorage.getItem('ts2');if(r)entries=JSON.parse(r);}catch(e){}rtl();rd();}
@@ -389,8 +382,7 @@ async function saveE(){
   btn.disabled=true;btn.textContent='กำลังบันทึก...';
   if(window.fbReady){
     try{
-      const{collection,addDoc,serverTimestamp}=window.fbM;
-      await addDoc(collection(window.db,'sales'),{...data,timestamp:serverTimestamp()});
+      await window.db.collection('sales').add({...data, timestamp: firebase.firestore.FieldValue.serverTimestamp()});
     }catch(e){toast('❌ '+e.message,'#b91c1c');btn.disabled=false;btn.textContent='✅ บันทึกรายการ';return;}
   }else{
     data.id=Date.now().toString();data.timestamp=new Date().toISOString();
@@ -409,7 +401,7 @@ function clearF(){
 async function delE(id){
   if(!confirm('ลบรายการนี้?'))return;
   if(window.fbReady){
-    try{const{doc,deleteDoc}=window.fbM;await deleteDoc(doc(window.db,'sales',id));}
+    try{await window.db.collection('sales').doc(id).delete();}
     catch(e){toast('❌ ลบล้มเหลว','#b91c1c');return;}
   }else{entries=entries.filter(e=>e.id!==id);saveL();rtl();rd();}
   toast('🗑️ ลบแล้ว','#b91c1c');
@@ -437,7 +429,7 @@ async function saveEd(){
     payment:editPay,note:document.getElementById('e-note').value.trim(),total:sv.s+bv.s
   };
   if(window.fbReady){
-    try{const{doc,updateDoc}=window.fbM;await updateDoc(doc(window.db,'sales',editId),u);}
+    try{await window.db.collection('sales').doc(editId).update(u);}
     catch(e){toast('❌ แก้ไขล้มเหลว','#b91c1c');return;}
   }else{
     const i=entries.findIndex(x=>x.id===editId);
