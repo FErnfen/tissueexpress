@@ -226,11 +226,19 @@ tbody td{padding:11px 13px;font-size:14px;vertical-align:middle}
   </div>
 
   <div class="card">
+    <div class="ctitle">🧻 ทิชชู่</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
+      <div class="f"><label>จำนวน (ชิ้น)</label><input id="r-oq" type="number" placeholder="0" min="0" oninput="cp()"></div>
+      <div class="f"><label>ราคา / ชิ้น (฿)</label><input id="r-op" type="number" placeholder="0.00" min="0" step="0.01" oninput="cp()"></div>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="ctitle">💳 ช่องทางชำระเงิน</div>
     <div class="pg-row">
       <button class="pb" id="p-cash" onclick="sp('cash')">💵 เงินสด</button>
       <button class="pb" id="p-qr" onclick="sp('qr')">📱 QR Code</button>
-      <button class="pb" id="p-transfer" onclick="sp('transfer')">🏦 โอนเงิน</button>
+      <button class="pb" id="p-transfer" onclick="sp('transfer')">🏦 โอนเงิน (ไลน์)</button>
     </div>
   </div>
 
@@ -272,7 +280,7 @@ tbody td{padding:11px 13px;font-size:14px;vertical-align:middle}
     <table>
       <thead><tr>
         <th>วันที่/เวลา</th><th>ขนส่ง (จน.×ราคา)</th>
-        <th>กล่อง (จน.×ราคา)</th><th>ชำระ</th><th>รวม</th><th>หมายเหตุ</th><th></th>
+        <th>กล่อง (จน.×ราคา)</th><th>ทิชชู่</th><th>ชำระ</th><th>รวม</th><th>หมายเหตุ</th><th></th>
       </tr></thead>
       <tbody id="dtb"></tbody>
     </table>
@@ -298,11 +306,18 @@ tbody td{padding:11px 13px;font-size:14px;vertical-align:middle}
     </div>
   </div>
   <div class="card" style="margin-bottom:11px">
+    <div class="ctitle">🧻 ทิชชู่</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
+      <div class="f"><label>จำนวน</label><input id="e-oq" type="number" min="0" oninput="ce()"></div>
+      <div class="f"><label>ราคา / ชิ้น</label><input id="e-op" type="number" min="0" step="0.01" oninput="ce()"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:11px">
     <div class="ctitle">💳 ช่องทางชำระ</div>
     <div class="pg-row">
       <button class="pb" id="ep-cash" onclick="sep('cash')">💵 เงินสด</button>
       <button class="pb" id="ep-qr" onclick="sep('qr')">📱 QR Code</button>
-      <button class="pb" id="ep-transfer" onclick="sep('transfer')">🏦 โอนเงิน</button>
+      <button class="pb" id="ep-transfer" onclick="sep('transfer')">🏦 โอนเงิน (ไลน์)</button>
     </div>
   </div>
   <div class="card">
@@ -317,7 +332,7 @@ tbody td{padding:11px 13px;font-size:14px;vertical-align:middle}
 
 <script>
 let entries=[], selPay='', editPay='', editId=null;
-const PL={cash:'เงินสด',qr:'QR Code',transfer:'โอนเงิน'};
+const PL={cash:'เงินสด',qr:'QR Code',transfer:'โอนเงิน (ไลน์)'};
 const PE={cash:'💵',qr:'📱',transfer:'🏦'};
 const PC={cash:'cc',qr:'cq',transfer:'ct'};
 
@@ -363,8 +378,9 @@ function sep(t){editPay=t;['cash','qr','transfer'].forEach(x=>document.getElemen
 // CALC
 function gv(p){const q=parseFloat(document.getElementById(p+'-sq').value)||0,pr=parseFloat(document.getElementById(p+'-sp').value)||0;return{q,pr,s:q*pr};}
 function gvb(p){const q=parseFloat(document.getElementById(p+'-bq').value)||0,pr=parseFloat(document.getElementById(p+'-bp').value)||0;return{q,pr,s:q*pr};}
-function cp(){const t=gv('r').s+gvb('r').s;document.getElementById('r-tot').textContent='฿ '+fmt(t);return t;}
-function ce(){const t=gv('e').s+gvb('e').s;document.getElementById('e-tot').textContent='฿ '+fmt(t);return t;}
+function gvo(p){const q=parseFloat(document.getElementById(p+'-oq').value)||0,pr=parseFloat(document.getElementById(p+'-op').value)||0;return{q,pr,s:q*pr};}
+function cp(){const t=gv('r').s+gvb('r').s+gvo('r').s;document.getElementById('r-tot').textContent='฿ '+fmt(t);return t;}
+function ce(){const t=gv('e').s+gvb('e').s+gvo('e').s;document.getElementById('e-tot').textContent='฿ '+fmt(t);return t;}
 function fmt(n){return n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});}
 
 // SAVE
@@ -372,10 +388,11 @@ async function saveE(){
   const total=cp();
   if(total<=0){toast('⚠️ กรุณากรอกจำนวนและราคา','#e85d04');return;}
   if(!selPay){toast('⚠️ กรุณาเลือกช่องทางชำระเงิน','#e85d04');return;}
-  const sv=gv('r'),bv=gvb('r');
+  const sv=gv('r'),bv=gvb('r'),ov=gvo('r');
   const data={
     shipQty:sv.q,shipPrice:sv.pr,shipSub:sv.s,
     boxQty:bv.q,boxPrice:bv.pr,boxSub:bv.s,
+    otherName:'ทิชชู่',otherQty:ov.q,otherPrice:ov.pr,otherSub:ov.s,
     payment:selPay,note:document.getElementById('r-note').value.trim(),total
   };
   const btn=document.getElementById('bsave');
@@ -392,7 +409,7 @@ async function saveE(){
   toast('✅ บันทึกรายการสำเร็จ');
 }
 function clearF(){
-  ['r-sq','r-sp','r-bq','r-bp','r-note'].forEach(id=>document.getElementById(id).value='');
+  ['r-sq','r-sp','r-bq','r-bp','r-oq','r-op','r-note'].forEach(id=>document.getElementById(id).value='');
   selPay='';['cash','qr','transfer'].forEach(x=>document.getElementById('p-'+x).className='pb');
   document.getElementById('r-tot').textContent='฿ 0.00';
 }
@@ -415,6 +432,8 @@ function openEd(id){
   document.getElementById('e-sp').value=e.shipPrice||0;
   document.getElementById('e-bq').value=e.boxQty||0;
   document.getElementById('e-bp').value=e.boxPrice||0;
+  document.getElementById('e-oq').value=e.otherQty||0;
+  document.getElementById('e-op').value=e.otherPrice||0;
   document.getElementById('e-note').value=e.note||'';
   sep(e.payment||'');ce();
   document.getElementById('modal').classList.add('on');
@@ -422,11 +441,12 @@ function openEd(id){
 function cModal(){document.getElementById('modal').classList.remove('on');editId=null;}
 document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')cModal();});
 async function saveEd(){
-  const sv=gv('e'),bv=gvb('e');
+  const sv=gv('e'),bv=gvb('e'),ov=gvo('e');
   const u={
     shipQty:sv.q,shipPrice:sv.pr,shipSub:sv.s,
     boxQty:bv.q,boxPrice:bv.pr,boxSub:bv.s,
-    payment:editPay,note:document.getElementById('e-note').value.trim(),total:sv.s+bv.s
+    otherName:'ทิชชู่',otherQty:ov.q,otherPrice:ov.pr,otherSub:ov.s,
+    payment:editPay,note:document.getElementById('e-note').value.trim(),total:sv.s+bv.s+ov.s
   };
   if(window.fbReady){
     try{await window.db.collection('sales').doc(editId).update(u);}
@@ -456,6 +476,7 @@ function eCard(e){
   const lines=[];
   if(e.shipQty>0)lines.push('ขนส่ง × '+e.shipQty+' (฿'+e.shipPrice+')');
   if(e.boxQty>0)lines.push('กล่อง × '+e.boxQty+' (฿'+e.boxPrice+')');
+  if(e.otherName&&e.otherQty>0)lines.push(e.otherName+' × '+e.otherQty+' (฿'+e.otherPrice+')');
   return`<div class="ec">
     <div class="el">
       <div class="etime">${t}</div>
@@ -465,7 +486,7 @@ function eCard(e){
         <span class="chip ${PC[e.payment]||''}">${PE[e.payment]||''} ${PL[e.payment]||e.payment}</span>
         ${e.shipQty>0?`<span class="chip cs">🚚 ขนส่ง ${e.shipQty} ชิ้น</span>`:''}
         ${e.boxQty>0?`<span class="chip cb">📦 กล่อง ${e.boxQty} ชิ้น</span>`:''}
-      </div>
+        ${e.otherName&&e.otherQty>0?`<span class="chip" style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0">🛍️ ${e.otherName} ${e.otherQty} ชิ้น</span>`:''}      </div>
     </div>
     <div class="er">
       <div class="eamt">฿${fmt(e.total||0)}</div>
@@ -500,16 +521,20 @@ function rd(){
   const cn=(f)=>data.filter(f).length;
   const shipTotal=data.reduce((s,e)=>s+(e.shipSub||0),0);
   const boxTotal=data.reduce((s,e)=>s+(e.boxSub||0),0);
+  const otherTotal=data.reduce((s,e)=>s+(e.otherSub||0),0);
   const shipCnt=data.filter(e=>e.shipQty>0).reduce((s,e)=>s+(e.shipQty||0),0);
   const boxCnt=data.filter(e=>e.boxQty>0).reduce((s,e)=>s+(e.boxQty||0),0);
+  const otherCnt=data.filter(e=>e.otherQty>0).reduce((s,e)=>s+(e.otherQty||0),0);
+  const qrTransferTotal = sm(e=>e.payment==='qr'||e.payment==='transfer');
+  const qrTransferCnt   = cn(e=>e.payment==='qr'||e.payment==='transfer');
   const n=v=>v.toLocaleString('th-TH',{maximumFractionDigits:0});
   document.getElementById('sgrid').innerHTML=`
     <div class="sc"><div class="si">💰</div><div class="sl">ยอดรวมทั้งหมด</div><div class="sn co">฿${n(sm(()=>1))}</div><div class="ss">${data.length} รายการ</div></div>
     <div class="sc"><div class="si">🚚</div><div class="sl">รายได้ขนส่ง</div><div class="sn" style="color:#c2410c">฿${n(shipTotal)}</div><div class="ss">${shipCnt} ชิ้น</div></div>
     <div class="sc"><div class="si">📦</div><div class="sl">รายได้กล่อง</div><div class="sn" style="color:#0369a1">฿${n(boxTotal)}</div><div class="ss">${boxCnt} ชิ้น</div></div>
+    <div class="sc"><div class="si">🧻</div><div class="sl">ทิชชู่</div><div class="sn" style="color:#166534">฿${n(otherTotal)}</div><div class="ss">${otherCnt} ชิ้น</div></div>
     <div class="sc"><div class="si">💵</div><div class="sl">เงินสด</div><div class="sn cg">฿${n(sm(e=>e.payment==='cash'))}</div><div class="ss">${cn(e=>e.payment==='cash')} รายการ</div></div>
-    <div class="sc"><div class="si">📱</div><div class="sl">QR Code</div><div class="sn cb2">฿${n(sm(e=>e.payment==='qr'))}</div><div class="ss">${cn(e=>e.payment==='qr')} รายการ</div></div>
-    <div class="sc"><div class="si">🏦</div><div class="sl">โอนเงิน</div><div class="sn cp">฿${n(sm(e=>e.payment==='transfer'))}</div><div class="ss">${cn(e=>e.payment==='transfer')} รายการ</div></div>`;
+    <div class="sc"><div class="si">📱🏦</div><div class="sl">QR / โอน (ไลน์)</div><div class="sn cb2">฿${n(qrTransferTotal)}</div><div class="ss">${qrTransferCnt} รายการ</div></div>`;
   const tb=document.getElementById('dtb');
   const pc={cash:'cg',qr:'cb2',transfer:'cp'};
   if(!data.length){tb.innerHTML='';document.getElementById('demp').style.display='block';return;}
@@ -522,6 +547,7 @@ function rd(){
       <td style="color:var(--text2);font-size:13px;white-space:nowrap">${ds}<br>${ts}</td>
       <td>${e.shipQty>0?`${e.shipQty} × ฿${e.shipPrice}`:'-'}</td>
       <td>${e.boxQty>0?`${e.boxQty} × ฿${e.boxPrice}`:'-'}</td>
+      <td>${e.otherName&&e.otherQty>0?`${e.otherName} ${e.otherQty}×฿${e.otherPrice}`:'-'}</td>
       <td class="${pc[e.payment]||''}" style="font-weight:700;font-size:13px">${PE[e.payment]||''} ${PL[e.payment]||e.payment}</td>
       <td style="font-weight:800;color:var(--accent)">฿${fmt(e.total||0)}</td>
       <td style="color:var(--text2);font-size:13px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.note||'-'}</td>
@@ -542,6 +568,7 @@ function exportX(){
     return{'วันที่':d.toLocaleDateString('th-TH'),'เวลา':d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}),
       'จำนวนขนส่ง':e.shipQty||0,'ราคา/ชิ้น(ขนส่ง)':e.shipPrice||0,'รวมขนส่ง':e.shipSub||0,
       'จำนวนกล่อง':e.boxQty||0,'ราคา/ชิ้น(กล่อง)':e.boxPrice||0,'รวมกล่อง':e.boxSub||0,
+      'จำนวนทิชชู่':e.otherQty||0,'ราคา/ชิ้น(ทิชชู่)':e.otherPrice||0,'รวมทิชชู่':e.otherSub||0,
       'ช่องทางชำระ':PL[e.payment]||e.payment,'ยอดรวม':e.total||0,'หมายเหตุ':e.note||''};
   });
   const ws=XLSX.utils.json_to_sheet(rows);
@@ -549,9 +576,12 @@ function exportX(){
   XLSX.utils.book_append_sheet(wb,ws,'ยอดขาย');
   const total=data.reduce((s,e)=>s+(e.total||0),0);
   const ws2=XLSX.utils.aoa_to_sheet([['สรุป',''],['รายการ',data.length],['รวม',total],
+    ['ขนส่ง',data.reduce((s,e)=>s+(e.shipSub||0),0)],
+    ['กล่อง',data.reduce((s,e)=>s+(e.boxSub||0),0)],
+    ['ทิชชู่',data.reduce((s,e)=>s+(e.otherSub||0),0)],
     ['เงินสด',data.filter(e=>e.payment==='cash').reduce((s,e)=>s+(e.total||0),0)],
     ['QR Code',data.filter(e=>e.payment==='qr').reduce((s,e)=>s+(e.total||0),0)],
-    ['โอนเงิน',data.filter(e=>e.payment==='transfer').reduce((s,e)=>s+(e.total||0),0)]]);
+    ['โอนเงิน (ไลน์)',data.filter(e=>e.payment==='transfer').reduce((s,e)=>s+(e.total||0),0)]]);
   XLSX.utils.book_append_sheet(wb,ws2,'สรุป');
   const n=new Date();
   XLSX.writeFile(wb,`ยอดขาย_${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}.xlsx`);
